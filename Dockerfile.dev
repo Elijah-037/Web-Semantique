@@ -1,0 +1,36 @@
+FROM php:8.3-apache
+
+# Extensions requises par EasyRDF
+RUN apt-get update && apt-get install -y \
+        libxml2-dev libonig-dev git unzip curl \
+    && docker-php-ext-install xml mbstring \
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
+
+# Installer Xdebug pour le débogage
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
+# Configuration PHP de développement
+RUN cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+
+# Xdebug config
+RUN echo "xdebug.mode=debug\nxdebug.start_with_request=yes\nxdebug.client_host=host.docker.internal" \
+    >> "$PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini"
+
+# Installer Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configurer Apache : DocumentRoot → /var/www/html/public
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' \
+        /etc/apache2/sites-available/000-default.conf \
+    && echo '<Directory /var/www/html/public>\n\tAllowOverride All\n</Directory>' \
+    >> /etc/apache2/apache2.conf
+
+WORKDIR /var/www/html
+
+# Installer les dépendances Composer au build
+# (le code source est monté via volume → rechargement à chaud)
+COPY src/composer.json src/composer.lock* ./
+COPY src/patches/ ./patches/
+RUN composer install --no-interaction --prefer-dist

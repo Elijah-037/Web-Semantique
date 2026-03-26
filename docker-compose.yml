@@ -1,0 +1,18 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html          # rechargement à chaud du code
+      - vendor_cache:/var/www/html/vendor  # préserve vendor/ du build
+      - ./Assets:/var/www/assets:ro  # fichiers OWL en lecture seule
+    environment:
+      OWL_FILE_PATH: /var/www/assets/AfricanWildlifeOntology1.owl
+      APP_DEBUG: "true"
+    restart: unless-stopped
+
+volumes:
+  vendor_cache:

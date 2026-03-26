@@ -1,0 +1,27 @@
+{
+    "name": "sae501/web-semantique",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "easyrdf/easyrdf": "^1.1",
+        "cweagans/composer-patches": "^1.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "."
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "cweagans/composer-patches": true
+        }
+    },
+    "extra": {
+        "patches": {
+            "easyrdf/easyrdf": {
+                "Fix xml_set_object order for PHP 8.4 compatibility": "patches/easyrdf-php84-xml-set-object.patch"
+            }
+        }
+    }
+}
